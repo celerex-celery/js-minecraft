@@ -158,7 +158,7 @@ export default class WorldRenderer {
         for (let i = 0; i < 2; i++) {
             if (this.chunkSectionUpdateQueue.length !== 0) {
                 let chunkSection = this.chunkSectionUpdateQueue.shift();
-                if (chunkSection != null) {
+                if (chunkSection != null && chunkSection.chunk.loaded) {
                     // Rebuild chunk
                     chunkSection.rebuild(this);
                 }
@@ -556,6 +556,9 @@ export default class WorldRenderer {
     renderChunks(cameraChunkX, cameraChunkZ) {
         let world = this.minecraft.world;
         let renderDistance = this.minecraft.settings.viewDistance;
+        const unloadDistance = renderDistance + 2;
+
+        const chunksToUnload = [];
 
         // Update chunks
         for (let [index, chunk] of world.getChunkProvider().getChunks()) {
@@ -593,16 +596,16 @@ export default class WorldRenderer {
                 // Hide chunk
                 chunk.group.visible = false;
 
-                // Unload chunk
-                if (chunk.loaded) {
-                    chunk.unload();
-
-                    // TODO Implement chunk unloading
-                    //let index = chunk.x + (chunk.z << 16);
-                    //world.getChunkProvider().getChunks().delete(index);
-                    //world.group.remove(chunk.group);
+                // Queue for unload if far enough (with margin to prevent popping)
+                if (chunk.loaded && (distanceX >= unloadDistance || distanceZ >= unloadDistance)) {
+                    chunksToUnload.push({ x: chunk.x, z: chunk.z });
                 }
             }
+        }
+
+        // Unload chunks after iteration to avoid modifying map during iteration
+        for (const { x, z } of chunksToUnload) {
+            world.getChunkProvider().unloadChunk(x, z);
         }
 
         // Sort update queue, chunk sections that are closer to the camera get a higher priority
@@ -626,7 +629,7 @@ export default class WorldRenderer {
             for (let i = 0; i < 8; i++) {
                 if (this.chunkSectionUpdateQueue.length !== 0) {
                     let chunkSection = this.chunkSectionUpdateQueue.shift();
-                    if (chunkSection != null) {
+                    if (chunkSection != null && chunkSection.chunk.loaded) {
                         // Rebuild chunk
                         chunkSection.rebuild(this);
                     }

@@ -144,4 +144,28 @@ export default class ChunkSection {
     isEmpty() {
         return this.empty;
     }
+
+    unload() {
+        if (this.group.parent) {
+            this.group.parent.remove(this.group);
+        }
+        this.disposeThreeResources();
+    }
+
+    disposeThreeResources() {
+        this.group.traverse((object) => {
+            if (object.isMesh) {
+                if (object.geometry) {
+                    object.geometry.dispose();
+                }
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach((mat) => mat.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            }
+        });
+    }
 }

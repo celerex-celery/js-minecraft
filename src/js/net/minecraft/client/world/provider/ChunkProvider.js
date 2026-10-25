@@ -51,11 +51,21 @@ export default class ChunkProvider {
 
     unloadChunk(x, z) {
         let index = x + (z << 16);
-        this.chunks.delete(index);
+        let chunk = this.chunks.get(index);
+        if (chunk) {
+            chunk.unload();
+            this.chunks.delete(index);
+        }
     }
 
     getChunks() {
         return this.chunks;
     }
 
+    unloadAllChunks() {
+        for (let [index, chunk] of this.chunks) {
+            chunk.unload();
+        }
+        this.chunks.clear();
+    }
 }

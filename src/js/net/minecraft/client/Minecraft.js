@@ -131,7 +131,7 @@ export default class Minecraft {
             this.playerController = null;
 
             if (this.world !== null) {
-                this.world.getChunkProvider().getChunks().clear();
+                this.world.getChunkProvider().unloadAllChunks();
                 this.world.clearEntities();
                 this.world = null;
                 this.player = null;
@@ -146,7 +146,7 @@ export default class Minecraft {
 
             // Clear previous world
             if (this.world !== null) {
-                this.world.getChunkProvider().getChunks().clear();
+                this.world.getChunkProvider().unloadAllChunks();
                 this.world.clearEntities();
                 this.worldRenderer.reset();
                 this.itemRenderer.reset();
